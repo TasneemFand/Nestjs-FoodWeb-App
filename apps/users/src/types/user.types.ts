@@ -1,5 +1,4 @@
 import { ObjectType, Field } from '@nestjs/graphql';
-import { User } from '../entities/user.entity';
 
 @ObjectType()
 export class ErrorType {
@@ -13,7 +12,7 @@ export class ErrorType {
 @ObjectType()
 export class RegisterResponse {
   @Field()
-  user: User;
+  activation_token: string;
 
   @Field(() => ErrorType, { nullable: true })
   error?: ErrorType;

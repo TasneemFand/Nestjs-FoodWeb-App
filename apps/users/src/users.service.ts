@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { RegisterDto } from './dto/user.dto';
+import { ActivationDto, RegisterDto } from './dto/user.dto';
 import { Response } from 'express';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtVerifyOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from './email/email.service';
 
@@ -92,5 +92,42 @@ export class UsersService {
       },
     );
     return { token, activationCode };
+  }
+
+  // activation user
+  async activateUser(activationDto: ActivationDto, response: Response) {
+    const { activationToken, activationCode } = activationDto;
+
+    const newUser: { user: UserData; activationCode: string } =
+      this.jwtService.verify(activationToken, {
+        secret: this.configService.get<string>('ACTIVATION_SECRET'),
+      } as JwtVerifyOptions) as { user: UserData; activationCode: string };
+
+    if (newUser.activationCode !== activationCode) {
+      throw new BadRequestException('Invalid activation code');
+    }
+
+    const { name, email, password, phone_number } = newUser.user;
+
+    const existUser = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (existUser) {
+      throw new BadRequestException('User already exist with this email!');
+    }
+
+    const user = await this.prisma.user.create({
+      data: {
+        name,
+        email,
+        password,
+        phone_number,
+      },
+    });
+
+    return { user, response };
   }
 }

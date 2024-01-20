@@ -22,3 +22,14 @@ export class RegisterDto {
   @IsNotEmpty({ message: 'Phone Number is required.' })
   phone_number: number;
 }
+
+@InputType()
+export class ActivationDto {
+  @Field()
+  @IsNotEmpty({ message: 'Activation Token is required.' })
+  activationToken: string;
+
+  @Field()
+  @IsNotEmpty({ message: 'Activation Code is required.' })
+  activationCode: string;
+}
